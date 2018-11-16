@@ -20,13 +20,15 @@ public class StationarySniper extends AdvancedRobot
 		FIRING,
 	};
 	private State state = State.FINDING;
+	private double lastSeenEnemyHeading = 0;	
+
 	/**
 	 * run: MyFirstRobot's default behavior
 	 */
 	public void run() {
 		// Initialization of the robot should be put here
 		//setAdjustGunForRobotTurn(true);
-		//setAdjustRadarForGunTurn(true);
+		setAdjustRadarForGunTurn(false);
 
 		// After trying out your robot, try uncommenting the import at the top,
 		// and the next line:
@@ -40,7 +42,8 @@ public class StationarySniper extends AdvancedRobot
 			//out.println("My energy right now is: " + energy);
 			double curGunHeading = getGunHeading();
 			double curRadarHeading = getRadarHeading();
-			double misalignment = (curGunHeading - curRadarHeading + 180.0) % 360.0 - 180.0;
+//			double misalignment = (curGunHeading - lastSeenEnemyHeading + 180.0) % 360.0 - 180.0;
+			double misalignment = (curGunHeading - lastSeenEnemyHeading );
 
 			switch(state) {
 				case ALIGNING:
@@ -55,7 +58,9 @@ public class StationarySniper extends AdvancedRobot
 					setTurnRadarLeft(AIMING_SPEED);
 					break;
 				case FIRING:
+				//	out.println("
 					setTurnGunRight(misalignment); 
+					
 					fire(1);
 					break;
 			}
@@ -68,14 +73,14 @@ public class StationarySniper extends AdvancedRobot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
 		// Replace the next line with any behavior you would like
-		fire(3);
+		out.println("Saw robot at " + e.getDistance() + " @ " + e.getHeading());
+		lastSeenEnemyHeading = e.getHeading();
 		switch(state) {
 			case ALIGNING:
 				
 				break;
 			case FINDING:
 				out.println("Transitioning to state AIMING");
-				out.println("Saw robot at " + e.getDistance() + " @ " + e.getBearing());
 				state = State.AIMING;
 				break;
 			case AIMING:
