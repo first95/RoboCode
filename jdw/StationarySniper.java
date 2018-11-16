@@ -19,7 +19,7 @@ public class StationarySniper extends AdvancedRobot
 		AIMING,
 		FIRING,
 	};
-	private State state = State.ALIGNING;
+	private State state = State.FINDING;
 	/**
 	 * run: MyFirstRobot's default behavior
 	 */
@@ -42,25 +42,21 @@ public class StationarySniper extends AdvancedRobot
 			double curRadarHeading = getRadarHeading();
 			double misalignment = (curGunHeading - curRadarHeading + 180.0) % 360.0 - 180.0;
 
-			out.println("curGunHeading: " + curGunHeading + " curRadarHeading: " + curRadarHeading + " misalignment: " + misalignment);
 			switch(state) {
 				case ALIGNING:
-					setTurnGunRight(misalignment / 2);
-					setTurnRadarLeft(misalignment / 2);
-					if(misalignment == 0.0) {
-						state = State.FINDING;
-					}
+
+
 					break;
 				case FINDING:
-					setTurnGunRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per turn 
-					setTurnRadarRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per tun 
+					// Spin the radar fast, since we can move that faster than the gun
+					setTurnRadarLeft(INITIAL_FIND_SPEED);
 					break;
 				case AIMING:
-					setTurnGunLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
-					setTurnRadarLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
+					setTurnRadarLeft(AIMING_SPEED);
 					break;
 				case FIRING:
-					fire(10);
+					setTurnGunRight(misalignment); 
+					fire(1);
 					break;
 			}
 			execute();
@@ -78,9 +74,12 @@ public class StationarySniper extends AdvancedRobot
 				
 				break;
 			case FINDING:
+				out.println("Transitioning to state AIMING");
+				out.println("Saw robot at " + e.getDistance() + " @ " + e.getBearing());
 				state = State.AIMING;
 				break;
 			case AIMING:
+				out.println("Transitioning to state FIRING");
 				state = State.FIRING;
 				break;
 			case FIRING:
