@@ -5,7 +5,7 @@ import robocode.*;
 // API help : http://robocode.sourceforge.net/docs/robocode/robocode/Robot.html
 
 /**
- * MyFirstRobot - a robot by (your name here)
+ * A robot that sits still and shoots at others
  */
 public class StationarySniper extends AdvancedRobot
 {
@@ -19,7 +19,7 @@ public class StationarySniper extends AdvancedRobot
 		AIMING,
 		FIRING,
 	};
-	private State state = State.FINDING;
+	private State state = State.ALIGNING;
 	/**
 	 * run: MyFirstRobot's default behavior
 	 */
@@ -35,21 +35,29 @@ public class StationarySniper extends AdvancedRobot
 
 		// Robot main loop
 		while(true) {	
-			double energy;
-			energy = getEnergy();
+			//double energy;
+			//energy = getEnergy();
 			//out.println("My energy right now is: " + energy);
+			double curGunHeading = getGunHeading();
+			double curRadarHeading = getRadarHeading();
+			double misalignment = (curGunHeading - curRadarHeading + 180.0) % 360.0 - 180.0;
 
-
+			out.println("curGunHeading: " + curGunHeading + " curRadarHeading: " + curRadarHeading + " misalignment: " + misalignment);
 			switch(state) {
 				case ALIGNING:
+					setTurnGunRight(misalignment / 2);
+					setTurnRadarLeft(misalignment / 2);
+					if(misalignment == 0.0) {
+						state = State.FINDING;
+					}
 					break;
 				case FINDING:
 					setTurnGunRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per turn 
 					setTurnRadarRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per tun 
 					break;
 				case AIMING:
-					setTurnGunRight(-AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
-					setTurnRadarRight(-AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
+					setTurnGunLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
+					setTurnRadarLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
 					break;
 				case FIRING:
 					fire(10);
@@ -66,6 +74,9 @@ public class StationarySniper extends AdvancedRobot
 		// Replace the next line with any behavior you would like
 		fire(3);
 		switch(state) {
+			case ALIGNING:
+				
+				break;
 			case FINDING:
 				state = State.AIMING;
 				break;
