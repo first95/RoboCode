@@ -43,7 +43,8 @@ public class StationarySniper extends AdvancedRobot
 			double curGunHeading = getGunHeading();
 			double curRadarHeading = getRadarHeading();
 //			double misalignment = (curGunHeading - lastSeenEnemyHeading + 180.0) % 360.0 - 180.0;
-			double misalignment = (curGunHeading - lastSeenEnemyHeading );
+			double gunMisalignment = (lastSeenEnemyHeading - curGunHeading);
+			double radarMisalignment = (lastSeenEnemyHeading - curRadarHeading);
 
 			switch(state) {
 				case ALIGNING:
@@ -55,12 +56,14 @@ public class StationarySniper extends AdvancedRobot
 					setTurnRadarLeft(INITIAL_FIND_SPEED);
 					break;
 				case AIMING:
-					setTurnRadarLeft(AIMING_SPEED);
+					out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					setTurnGunRight(gunMisalignment); 
+					setTurnRadarRight(radarMisalignment);
 					break;
 				case FIRING:
-				//	out.println("
-					setTurnGunRight(misalignment); 
-					
+					out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					setTurnGunRight(gunMisalignment); 
+					setTurnRadarRight(radarMisalignment);
 					fire(1);
 					break;
 			}
@@ -72,9 +75,12 @@ public class StationarySniper extends AdvancedRobot
 	 * onScannedRobot: What to do when you see another robot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
+		// e.getHeading() tells you which direction the other robot is facing
+		// e.getBearing() tells you the angle between your robot direction and the direction you'd be have to be facing to face directly at the other robot
+		
 		// Replace the next line with any behavior you would like
-		out.println("Saw robot at " + e.getDistance() + " @ " + e.getHeading());
-		lastSeenEnemyHeading = e.getHeading();
+		lastSeenEnemyHeading = getHeading() + e.getBearing();
+		out.println("Saw robot at " + e.getDistance() + " @ " + lastSeenEnemyHeading + " with gun at " + getGunHeading() + ", radar at " + getRadarHeading() + " and robot at " + getHeading());
 		switch(state) {
 			case ALIGNING:
 				
