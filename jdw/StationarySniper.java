@@ -14,7 +14,6 @@ public class StationarySniper extends AdvancedRobot
 	public final double AIMING_SPEED = 1;
 	
 	private enum State {
-		ALIGNING,
 		FINDING,
 		AIMING,
 		FIRING,
@@ -27,29 +26,16 @@ public class StationarySniper extends AdvancedRobot
 	 */
 	public void run() {
 		// Initialization of the robot should be put here
-		//setAdjustGunForRobotTurn(true);
 		setAdjustRadarForGunTurn(false);
-
-		// After trying out your robot, try uncommenting the import at the top,
-		// and the next line:
-
-		// setColors(Color.red,Color.blue,Color.green); // body,gun,radar
 
 		// Robot main loop
 		while(true) {	
-			//double energy;
-			//energy = getEnergy();
-			//out.println("My energy right now is: " + energy);
 			double curGunHeading = getGunHeading();
 			double curRadarHeading = getRadarHeading();
 			double gunMisalignment = shortWayAngleDeltaDegrees(curGunHeading, lastSeenEnemyHeading);
 			double radarMisalignment =  shortWayAngleDeltaDegrees(curRadarHeading, lastSeenEnemyHeading);
 
 			switch(state) {
-				case ALIGNING:
-
-
-					break;
 				case FINDING:
 					// Spin the radar fast, since we can move that faster than the gun
 					setTurnRadarLeft(INITIAL_FIND_SPEED);
@@ -66,6 +52,7 @@ public class StationarySniper extends AdvancedRobot
 					fire(100); // It won't fire with a full 100 but it'll spend all it's allowed to
 					break;
 			}
+			// Apply the commanded set...() movements
 			execute();
 		}
 	}
@@ -85,19 +72,16 @@ public class StationarySniper extends AdvancedRobot
 	}
 
 	/**
-	 * onScannedRobot: What to do when you see another robot
+	 * Record the last seen location of the robot and start aiming at it
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
 		// e.getHeading() tells you which direction the other robot is facing
 		// e.getBearing() tells you the angle between your robot direction and the direction you'd be have to be facing to face directly at the other robot
 		
-		// Replace the next line with any behavior you would like
+		// Record the compass heading to the robot
 		lastSeenEnemyHeading = getHeading() + e.getBearing();
 		//out.println("Saw robot at " + e.getDistance() + " @ " + lastSeenEnemyHeading + " with gun at " + getGunHeading() + ", radar at " + getRadarHeading() + " and robot at " + getHeading());
 		switch(state) {
-			case ALIGNING:
-				
-				break;
 			case FINDING:
 				out.println("Transitioning to state AIMING");
 				state = State.AIMING;
@@ -113,21 +97,18 @@ public class StationarySniper extends AdvancedRobot
 	}
 
 	/**
-	 * onHitByBullet: What to do when you're hit by a bullet
+	 * When hit, move a little bit.
 	 */
 	public void onHitByBullet(HitByBulletEvent e) {
-		// Replace the next line with any behavior you would like
-		back(10);
+		out.println("Transitioning to state FINDING");
+		state = State.FINDING;
+		back(50);
 	}
 	
 	/**
-	 * onHitWall: What to do when you hit a wall
+	 * If a bullet misses, the other robot probably moved.  
+	 * Find it again.
 	 */
-	public void onHitWall(HitWallEvent e) {
-		// Replace the next line with any behavior you would like
-		back(20);
-	}	
-	
 	public void onBulletMissed(BulletMissedEvent event) {
 		out.println("Transitioning to state FINDING");
 		state = State.FINDING;
