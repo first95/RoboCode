@@ -55,12 +55,12 @@ public class StationarySniper extends AdvancedRobot
 					setTurnRadarLeft(INITIAL_FIND_SPEED);
 					break;
 				case AIMING:
-					out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					//out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
 					setTurnGunRight(gunMisalignment); 
 					setTurnRadarRight(radarMisalignment);
 					break;
 				case FIRING:
-					out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					//out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
 					setTurnGunRight(gunMisalignment); 
 					setTurnRadarRight(radarMisalignment);
 					fire(100); // It won't fire with a full 100 but it'll spend all it's allowed to
@@ -93,7 +93,7 @@ public class StationarySniper extends AdvancedRobot
 		
 		// Replace the next line with any behavior you would like
 		lastSeenEnemyHeading = getHeading() + e.getBearing();
-		out.println("Saw robot at " + e.getDistance() + " @ " + lastSeenEnemyHeading + " with gun at " + getGunHeading() + ", radar at " + getRadarHeading() + " and robot at " + getHeading());
+		//out.println("Saw robot at " + e.getDistance() + " @ " + lastSeenEnemyHeading + " with gun at " + getGunHeading() + ", radar at " + getRadarHeading() + " and robot at " + getHeading());
 		switch(state) {
 			case ALIGNING:
 				
