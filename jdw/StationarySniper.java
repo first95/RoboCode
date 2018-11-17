@@ -14,73 +14,80 @@ public class StationarySniper extends AdvancedRobot
 	public final double AIMING_SPEED = 1;
 	
 	private enum State {
-		ALIGNING,
 		FINDING,
 		AIMING,
 		FIRING,
 	};
-	private State state = State.ALIGNING;
+	private State state = State.FINDING;
+	private double lastSeenEnemyHeading = 0;	
+
 	/**
 	 * run: MyFirstRobot's default behavior
 	 */
 	public void run() {
 		// Initialization of the robot should be put here
-		//setAdjustGunForRobotTurn(true);
-		//setAdjustRadarForGunTurn(true);
-
-		// After trying out your robot, try uncommenting the import at the top,
-		// and the next line:
-
-		// setColors(Color.red,Color.blue,Color.green); // body,gun,radar
+		setAdjustRadarForGunTurn(false);
 
 		// Robot main loop
 		while(true) {	
-			//double energy;
-			//energy = getEnergy();
-			//out.println("My energy right now is: " + energy);
 			double curGunHeading = getGunHeading();
 			double curRadarHeading = getRadarHeading();
-			double misalignment = (curGunHeading - curRadarHeading + 180.0) % 360.0 - 180.0;
+			double gunMisalignment = shortWayAngleDeltaDegrees(curGunHeading, lastSeenEnemyHeading);
+			double radarMisalignment =  shortWayAngleDeltaDegrees(curRadarHeading, lastSeenEnemyHeading);
 
-			out.println("curGunHeading: " + curGunHeading + " curRadarHeading: " + curRadarHeading + " misalignment: " + misalignment);
 			switch(state) {
-				case ALIGNING:
-					setTurnGunRight(misalignment / 2);
-					setTurnRadarLeft(misalignment / 2);
-					if(misalignment == 0.0) {
-						state = State.FINDING;
-					}
-					break;
 				case FINDING:
-					setTurnGunRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per turn 
-					setTurnRadarRight(INITIAL_FIND_SPEED); // The radar actually only manages about 60 degrees per tun 
+					// Spin the radar fast, since we can move that faster than the gun
+					setTurnRadarLeft(INITIAL_FIND_SPEED);
 					break;
 				case AIMING:
-					setTurnGunLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
-					setTurnRadarLeft(AIMING_SPEED); // The radar actually only manages about 60 degrees per turn 
+					//out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					setTurnGunRight(gunMisalignment); 
+					setTurnRadarRight(radarMisalignment);
 					break;
 				case FIRING:
-					fire(10);
+					//out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
+					setTurnGunRight(gunMisalignment); 
+					setTurnRadarRight(radarMisalignment);
+					fire(100); // It won't fire with a full 100 but it'll spend all it's allowed to
 					break;
 			}
+			// Apply the commanded set...() movements
 			execute();
 		}
 	}
 
 	/**
-	 * onScannedRobot: What to do when you see another robot
+	 * If we wanna turn the gun or radar from heading a to angle b,
+	 * compute how many degrees to turn, taking the shortest route.
+	 */
+	private static double shortWayAngleDeltaDegrees(double a, double b) {
+		double delta = b - a;
+		if(delta > 180.0) {
+			delta -= 360.0;
+		} else if (delta < -180.0) {
+			delta += 360.0;
+		}
+		return delta;
+	}
+
+	/**
+	 * Record the last seen location of the robot and start aiming at it
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
-		// Replace the next line with any behavior you would like
-		fire(3);
+		// e.getHeading() tells you which direction the other robot is facing
+		// e.getBearing() tells you the angle between your robot direction and the direction you'd be have to be facing to face directly at the other robot
+		
+		// Record the compass heading to the robot
+		lastSeenEnemyHeading = getHeading() + e.getBearing();
+		//out.println("Saw robot at " + e.getDistance() + " @ " + lastSeenEnemyHeading + " with gun at " + getGunHeading() + ", radar at " + getRadarHeading() + " and robot at " + getHeading());
 		switch(state) {
-			case ALIGNING:
-				
-				break;
 			case FINDING:
+				out.println("Transitioning to state AIMING");
 				state = State.AIMING;
 				break;
 			case AIMING:
+				out.println("Transitioning to state FIRING");
 				state = State.FIRING;
 				break;
 			case FIRING:
@@ -90,18 +97,20 @@ public class StationarySniper extends AdvancedRobot
 	}
 
 	/**
-	 * onHitByBullet: What to do when you're hit by a bullet
+	 * When hit, move a little bit.
 	 */
 	public void onHitByBullet(HitByBulletEvent e) {
-		// Replace the next line with any behavior you would like
-		back(10);
+		out.println("Transitioning to state FINDING");
+		state = State.FINDING;
+		back(50);
 	}
 	
 	/**
-	 * onHitWall: What to do when you hit a wall
+	 * If a bullet misses, the other robot probably moved.  
+	 * Find it again.
 	 */
-	public void onHitWall(HitWallEvent e) {
-		// Replace the next line with any behavior you would like
-		back(20);
-	}	
+	public void onBulletMissed(BulletMissedEvent event) {
+		out.println("Transitioning to state FINDING");
+		state = State.FINDING;
+	}
 }
