@@ -42,9 +42,8 @@ public class StationarySniper extends AdvancedRobot
 			//out.println("My energy right now is: " + energy);
 			double curGunHeading = getGunHeading();
 			double curRadarHeading = getRadarHeading();
-//			double misalignment = (curGunHeading - lastSeenEnemyHeading + 180.0) % 360.0 - 180.0;
-			double gunMisalignment = (lastSeenEnemyHeading - curGunHeading);
-			double radarMisalignment = (lastSeenEnemyHeading - curRadarHeading);
+			double gunMisalignment = shortWayAngleDeltaDegrees(curGunHeading, lastSeenEnemyHeading);
+			double radarMisalignment =  shortWayAngleDeltaDegrees(curRadarHeading, lastSeenEnemyHeading);
 
 			switch(state) {
 				case ALIGNING:
@@ -64,11 +63,25 @@ public class StationarySniper extends AdvancedRobot
 					out.println("curGunHeading: " + curGunHeading + " misalignment: " + gunMisalignment);
 					setTurnGunRight(gunMisalignment); 
 					setTurnRadarRight(radarMisalignment);
-					fire(1);
+					fire(100); // It won't fire with a full 100 but it'll spend all it's allowed to
 					break;
 			}
 			execute();
 		}
+	}
+
+	/**
+	 * If we wanna turn the gun or radar from heading a to angle b,
+	 * compute how many degrees to turn, taking the shortest route.
+	 */
+	private static double shortWayAngleDeltaDegrees(double a, double b) {
+		double delta = b - a;
+		if(delta > 180.0) {
+			delta -= 360.0;
+		} else if (delta < -180.0) {
+			delta += 360.0;
+		}
+		return delta;
 	}
 
 	/**
@@ -114,4 +127,9 @@ public class StationarySniper extends AdvancedRobot
 		// Replace the next line with any behavior you would like
 		back(20);
 	}	
+	
+	public void onBulletMissed(BulletMissedEvent event) {
+		out.println("Transitioning to state FINDING");
+		state = State.FINDING;
+	}
 }
